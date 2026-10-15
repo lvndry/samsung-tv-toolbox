@@ -43,7 +43,7 @@ Hard-won gotchas, all documented in `README.md`:
 - 8002 uses a self-signed cert (`rejectUnauthorized: false` on a home LAN is fine)
 - The pairing token lives in `token.txt` and survives reboots
 
-**Result:** full key control — power, volume, mute, navigation, apps. Verified live (volume 7→10, mute toggle).
+**Result:** full key control — power, volume, mute, navigation, apps. Important correction (user-verified): the remote was *flaky before* Developer Mode was enabled — mute landed but volume was dropped, and the confirmed volume 7→10 change only happened *after* the user had enabled Developer Mode themselves. So on this firmware, dev mode (or the IP-authorized-host status it grants) is partly what makes the Control 2.0 API reliable, not just a Phase-2 feature. Pairing alone is not enough.
 
 ## Phase 2 — Developer Mode: the 123-12345 ritual
 
