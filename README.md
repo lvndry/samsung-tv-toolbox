@@ -87,15 +87,21 @@ Friendly names are mapped to this TV's real codes, so both work:
   Verified via API: `developerMode: "1"`. Setting path on this model:
   *Home → Apps → App Settings (bottom) → press `123` button on the remote →
   type `12345` on the on-screen keypad* (took a couple of tries).
-- **Open problem:** the TV's `sdbd` daemon never opens port 26101 — raw TSS
-  handshake (`tss-1.0` UDP to 49001) gets no reply, `sdb connect` fails, and
-  SSH 10022 never opens either. Likely needs Tizen Studio's full connection
-  flow to wake it.
+- **Concluded (second session, 2026-10-15):** the TV's `sdbd` simply never
+  starts on this 2021 Tizen 6 firmware. Exhausted: raw TSS handshake in both
+  directions (sending `tss-1.0` at the TV's 49001 in several payload variants,
+  and a TSS listener on the Mac's UDP 49001 across a full TV power cycle —
+  the TV never sent its greeting), host-side sdb server on 26101/26099, and
+  direct connection attempts (`sdb connect`). Ports 26101/26099/10022/49001
+  all stay closed with dev mode on + correct IP + reboot + no Reconnect
+  button in the dialog. Reference for the modern flow: github.com/SushyDev/
+  tizen-homebrew (2026) — plain TCP to 26101, no handshake; its error table
+  (ECONNREFUSED = sdbd not running) matches our state exactly.
 - `sdb/` contains a working macOS build of the sdb client (built from
   `sdb/src/`, which carries an `#ifdef __linux__` patch in
   `src/remount_service.c`; `make sdb` writes the binary to `bin/sdbd` on
   Apple Silicon — the Makefile aliases it). `sdb start-server` works and
   binds 26099 locally.
-- Next step if we resume: use Tizen Studio's full sdbd stack or the
-  connection flow in `sdb/src/protocol.txt`. If it works: `sdb shell` =
-  real shell on the box, `sdb install *.tpk` = sideloading.
+- If we ever resume: only Tizen Studio's own dev-device connection remains
+  untested (its full stack may do something extra). Prize if it works:
+  `sdb shell` = real shell, `sdb install *.tpk` = sideloading.
