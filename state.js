@@ -1,31 +1,29 @@
-// Ask the TV for current app / media state, re-asking every 2s (token warm-up) for 25s.
-const fs = require("fs");
-const path = require("path");
-const https = require("https");
-const WebSocket = require("ws");
-const AGENT = new https.Agent({ rejectUnauthorized: false });
-const IP = "192.168.1.119";
-const NAME = "U2Ftc3VuZ1JlbW90ZUFwcA==";
-const token = fs.readFileSync(path.join(__dirname, "token.txt"), "utf8").trim();
-const ws = new WebSocket(`wss://${IP}:8002/api/v2/channels/samsung.remote.control?name=${NAME}&token=${token}`, { agent: AGENT });
-let got = 0;
-ws.onmessage = e => {
-  const s = e.data.toString();
-  if (s.includes("ms.channel.connect") || s.includes("No Authorized")) return;
-  got++;
-  console.log("TV:", s.slice(0, 800));
-};
-const asks = ["ed.apps.current.get", "ed.media.get", "ed.installedApp.get"];
-let n = 0;
-ws.onopen = () => {
-  console.log("LISTENING 25s");
-  setInterval(() => {
-    const ev = asks[n++ % asks.length];
-    ws.send(JSON.stringify({ method: "ms.channel.emit", params: { event: ev, to: "host" } }));
-  }, 2000);
-};
-ws.onclose = e => console.log("CLOSED", e.code);
-setTimeout(() => {
-  if (!got) console.log("NO_STATE_EVENTS in 25s");
-  process.exit(0);
-}, 25000);
+// Ask the TV for its current state and print everything it answers.
+//
+//   node state.js
+//
+// Some models (this one among them) answer to almost none of these events —
+// the TV is quiet by design. If nothing prints after ~5 s, that is a
+// working result, not a failure.
+import { RemoteControl, loadToken, sleep } from './lib/tv.js';
+
+const events = ['ed.apps.current.get', 'ed.media.get', 'ed.installedApp.get'];
+
+const remote = await RemoteControl.connect({ token: loadToken() });
+let heard = 0;
+remote.listen((line) => {
+  heard++;
+  console.log('TV:', line);
+});
+
+try {
+  for (let i = 0; i < 10; i++) {
+    remote.request(events[i % events.length]);
+    await sleep(2000);
+  }
+} finally {
+  remote.close();
+}
+
+if (!heard) console.log('the TV answered nothing (this model is mostly silent — expected)');
+else console.log(`heard ${heard} event(s)`);

@@ -1,4 +1,14 @@
 {
+  "name": "samsung-tv-toolbox",
+  "type": "module",
+  "scripts": {
+    "pair": "node pair.js",
+    "remote": "node remote.js",
+    "state": "node state.js",
+    "listen": "node listen.js",
+    "wake": "node wake.js",
+    "devmode": "node devmode/devmode.js"
+  },
   "dependencies": {
     "ws": "^8.22.0"
   }

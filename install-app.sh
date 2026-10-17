@@ -8,7 +8,7 @@
 # filename of the download.
 set -euo pipefail
 
-TV=192.168.1.119
+TV="${TV_IP:-192.168.1.119}"
 PIN_FILE="$(dirname "$0")/hbpin.txt"
 [ -f "$PIN_FILE" ] || PIN_FILE="${TVPIN_FILE:-}"
 [ -n "$PIN_FILE" ] && [ -f "$PIN_FILE" ] || { echo "PIN file not found (hbpin.txt next to this script)"; exit 1; }

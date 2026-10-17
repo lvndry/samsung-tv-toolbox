@@ -8,7 +8,9 @@
 import dgram from 'node:dgram';
 
 const MAC = (process.argv[2] || 'f8:4e58:e7:11:de').toLowerCase();
-const broadcast = process.argv[3] || '192.168.1.255';
+// Default broadcast: the TV's own network, last octet 255 (respects TV_IP).
+const defaultBroadcast = (process.env.TV_IP || '192.168.1.119').replace(/\d+$/, '255');
+const broadcast = process.argv[3] || defaultBroadcast;
 
 const bytes = MAC.match(/..../g)?.map(h => parseInt(h, 16));
 if (!bytes || bytes.length !== 6) {
