@@ -7,6 +7,7 @@
     "state": "node state.js",
     "listen": "node listen.js",
     "wake": "node wake.js",
+    "install-app": "node install-app.js",
     "devmode": "node devmode/devmode.js"
   },
   "dependencies": {

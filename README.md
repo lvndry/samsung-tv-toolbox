@@ -4,8 +4,8 @@ Take over a Samsung Tizen smart TV from your own computer: send remote keys
 over the network, pair once, sideload apps, drive the Developer Mode
 setup, wake the TV from sleep, and talk to Samsung's `sdb` debug daemon.
 
-Everything is plain Node.js (one dependency, `ws`) plus a small bash
-sideloader, and it all talks to the TV over your LAN. The scripts were
+Everything is Node.js (one dependency, `ws`), and it all talks to the TV
+over your LAN. The scripts were
 built and tested against a Samsung CU7105 on Tizen 6; the Control 2.0 and
 sdb parts apply to most modern Samsung smart TVs.
 
@@ -46,7 +46,7 @@ key clicks, state requests, events.
 | `state.js` | Asks the TV for its current app / media / installed-app state and prints the answers. Some models — this one included — answer to almost none of the events; a quiet run is normal. | `node state.js` |
 | `listen.js` | Watches the channel live and prints whatever the TV pushes. Interact with the TV (open an app, press play) to see events. Ctrl+C to stop. | `node listen.js` |
 | `wake.js` | Wake-on-LAN: wakes a sleeping TV from the network (~10 s). Defaults to the MAC baked in the file; pass yours to override. Apps do **not** auto-launch after a WoL wake. | `node wake.js [MAC] [broadcast]` |
-| `install-app.sh` | Sideload a `.wgt` or `.tpk` (URL or local path) through the Tizen Homebrew service on port `8091`, with zip-repack for finicky bundles and auto-launch of the installed app. Needs `hbpin.txt` (the homebrew PIN, gitignored). | `./install-app.sh https://example.com/app.wgt "My App"` |
+| `install-app.js` | Sideload a `.wgt` or `.tpk` (URL or local path) through the Tizen Homebrew service on port `8091`, with zip-repack for finicky bundles and auto-launch of the installed app. Needs `hbpin.txt` (the homebrew PIN, gitignored). | `node install-app.js https://example.com/app.wgt "My App"` |
 | `devmode/devmode.js` | Enables **Developer Mode** by driving the TV's own UI: Apps panel → settings gear → `123` → keypad `12345`. Flip this once; it survives reboots. | `node devmode/devmode.js` |
 | `devmode/keypad.js` | Just the keypad half: types `12345` assuming the on-screen keypad is open with focus on the center key. Handy when `devmode.js` needs a second nudge. | `node devmode/keypad.js` |
 | `devmode/appsettings.js` | Walks Smart Hub → Apps → scroll to bottom, leaving "App Settings" highlighted — the official route to the same Developer Mode toggle. | `node devmode/appsettings.js` |
@@ -54,7 +54,7 @@ key clicks, state requests, events.
 
 ## Sideloading and sdb
 
-`install-app.sh` installs through the **Tizen Homebrew** service (port
+`install-app.js` installs through the **Tizen Homebrew** service (port
 `8091`), a small web app you sideload once (it installs itself through
 the same door and then serves as the permanent sideloader).
 
@@ -75,7 +75,7 @@ transfer, and a limited debug shell — the deepest door on these TVs.
 - Node 18+ (or Bun) on the machine you run this from.
 - The TV and your machine on the same LAN (a tailnet works too).
 - `token.txt` from `pair.js` for everything except `wake.js`.
-- Developer Mode on the TV for `install-app.sh` and `sdb`.
+- Developer Mode on the TV for `install-app.js` and `sdb`.
 
 ## Notes on the protocol
 
