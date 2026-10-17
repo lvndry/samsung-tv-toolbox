@@ -23,7 +23,7 @@ The TV's IP defaults to `192.168.1.119`. For a different TV:
 TV_IP=10.0.0.42 node remote.js power
 ```
 
-Set `TV_IP` for every script here — including `install-app.sh` and
+Set `TV_IP` for every script here — including `install-app.js` and
 `wake.js` (which also takes the MAC address as an argument).
 
 ## How it works, in one paragraph
