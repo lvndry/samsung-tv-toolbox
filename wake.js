@@ -12,7 +12,7 @@ const MAC = (process.argv[2] || 'f8:4e58:e7:11:de').toLowerCase();
 const defaultBroadcast = (process.env.TV_IP || '192.168.1.119').replace(/\d+$/, '255');
 const broadcast = process.argv[3] || defaultBroadcast;
 
-const bytes = MAC.match(/..../g)?.map(h => parseInt(h, 16));
+const bytes = Buffer.from(MAC.replace(/[:\-]/g, '').match(/../g).map(h => parseInt(h, 16)));
 if (!bytes || bytes.length !== 6) {
   console.error(`not a MAC address: ${MAC}`);
   process.exit(1);
@@ -24,14 +24,14 @@ packet.fill(0xff, 0, 6);
 for (let i = 0; i < 16; i++) bytes.copy(packet, 6 + i * 6);
 
 const socket = dgram.createSocket('udp4');
-const targets = [`${broadcast}:9`, '255.255.255.255:9'];
+const targets = [[broadcast, 9], ['255.255.255.255', 9]];
 let sent = 0;
-for (const [host, port] of targets.map(t => t.split(':')).map(([h, p]) => [h, Number(p)])) {
-  socket.send(packet, p, h, () => {
+for (const [host, port] of targets) {
+  socket.send(packet, port, host, () => {
     sent++;
     if (sent === targets.length) {
       socket.close();
-      console.log(`sent to ${targets.join(' and ')} — the TV is up in ~10 s`);
+      console.log(`sent to ${broadcast}:9 and 255.255.255.255:9 — the TV is up in ~10 s`);
     }
   });
 }
