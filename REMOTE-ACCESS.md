@@ -16,7 +16,7 @@ The TV has no public address — off-LAN it's unreachable as things stand. Two p
 
 ## Path B — Always-on personal node at home (no company infra)
 - **Constraint (user, 2026-10-15): personal devices must not route through
-  professional infrastructure (lysk-server).** A subnet route via the company
+  an always-on box outside the TV's LAN (e.g. a small Linux machine on the tailnet).** A subnet route via the company
   box is therefore ruled out.
 - Options, best first:
   1. **Home router as the Tailscale node** (if the router is OpenWrt/keezey

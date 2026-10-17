@@ -1,107 +1,59 @@
-# tv-remote
+# samsung-tv-toolbox
 
-Control a Samsung Tizen smart TV over the network from the Mac, using Samsung's
-official **Control 2.0** API (TLS websocket on port 8002).
+A toolbox for taking over a Samsung Tizen TV from your own computer: remote
+control over the network, one-command app sideloading, Developer Mode setup,
+the `sdb` debug client, Wake-on-LAN, and the write-ups of how it all works.
 
-Tested on a Samsung CU7105 55 (Tizen 6). No Samsung account, no app, no
-Bluetooth — just the local network and a one-time pairing.
+Everything here is plain Node.js (or bash, where noted) and talks to the TV
+over the LAN. Tested on a Samsung CU7105 (Tizen 6); the Control 2.0 and sdb
+parts apply to most modern Samsung smart TVs.
 
-## Layout
+## Quick start
 
-| File | Purpose |
-|---|---|
-| `remote.js` | The remote. Sends keys to the TV. |
-| `token.txt` | Your pairing token (keep this file — it's the whole authentication). |
-| `grabtoken.js` | Re-pairing helper: captures a fresh token if the old one expires. |
-| `state.js` | Listens for TV state events (app/media — this model is mostly silent on it). |
-| `listen.js` | Raw channel listener for debugging. |
-| `node_modules`, `bun.lock`, `package.json` | Only dependency is `ws`. |
-
-## Usage
-
-```sh
-# Send keys (waits for the TV's handshake automatically)
-bun remote.js KEY_MUTE
-bun remote.js KEY_VOLUMEUP KEY_VOLUMEUP
-bun remote.js KEY_MENU KEY_BACK
+```bash
+npm i                      # one dependency: ws
+node grabtoken.js          # grab the Control API token -> token.txt
+node remote.js power       # ...and turn the TV on
 ```
 
-Friendly names are mapped to this TV's real codes, so both work:
-`KEY_VOLUMEUP` → `KEY_VOLUP`, `KEY_VOLUMEDOWN` → `KEY_VOLDOWN`,
-`KEY_CHANNELUP` → `KEY_CHUP`, `KEY_CHANNELDOWN` → `KEY_CHDOWN`,
-`KEY_ENTER` → `KEY_RETURN`, `KEY_ESC` → `KEY_BACK`.
+The TV must be on the same LAN (or reachable through a tailnet — see
+[REMOTE-ACCESS.md](REMOTE-ACCESS.md)).
 
-### Common keys
+## What's in here
 
-- Power: `KEY_POWER`
-- Volume: `KEY_VOLUP` / `KEY_VOLDOWN`, `KEY_MUTE` (toggle)
-- Navigation: `KEY_UP` `KEY_DOWN` `KEY_LEFT` `KEY_RIGHT` `KEY_RETURN` (OK)
-- `KEY_MENU`, `KEY_BACK`, `KEY_HOME`, `KEY_INFO`, `KEY_EXIT`
-- Channel: `KEY_CHUP` / `KEY_CHDOWN`
-- Input: `KEY_SOURCE` (then navigate + `KEY_RETURN` to pick)
-- Numbers: `KEY_0` … `KEY_9`
+| File | What it does |
+| --- | --- |
+| `remote.js` | Send remote keys to the TV (power, volume, channel, arrows, OK…) over the Samsung Control 2.0 websocket. `node remote.js power` |
+| `grabtoken.js` | One-shot device pairing against the TV's Control API. Stores the token in `token.txt` (gitignored). |
+| `listen.js` | Listens for events the TV pushes over the same connection (state changes, key echoes). |
+| `state.js` | Prints the TV's current state (on/off, volume, channel) via the Control API. |
+| `wake.js` | Wake-on-LAN. Wakes a sleeping TV from the network: `node wake.js [MAC] [broadcast]`. Defaults to the MAC in the file. The TV is up in ~10 s; note that apps do **not** auto-launch after a WoL wake. |
+| `install-app.sh` | One-command sideload of a `.wgt` (URL or local path) through the Tizen Homebrew service, with auto-repack and auto-launch. |
+| `devmode/devmode.js` | Drives the Developer Mode toggle (Settings → General → **Accessibility** → Developer Mode) via the Control API, including the `123` → `12345` passcode dance on the keypad. |
+| `devmode/keypad.js` | The keypad helper the above uses to type the passcode (the remote has no number pad). |
+| `devmode/appsettings.js` | Reads/verifies the TV's app settings state. |
+| `sdb/sdb` | Prebuilt `sdb` client — Samsung's debug daemon front-end. Requires Developer Mode enabled and a **cold boot** of the TV (unplug 30 s). This is the door to `vd_appinstall`, file transfer, and the debug shell. |
+| `sdb/src/` | Upstream [TizenTeam/sdb](https://github.com/TizenTeam/sdb) source, kept for reference and patching. |
+| `sdb/rea-notes.md` | Reverse-engineering notes (Ghidra/REA) on the TV's `sdbd` daemon: which verbs it exposes, where the format strings live, what's patched out on Tizen 6. |
+| `debrief.html` | A self-contained HTML report of a full TV audit (network, ports, processes, installed apps). Open in any browser. |
+| `REMOTE-ACCESS.md` | Off-LAN access through a personal tailnet (no company infrastructure involved). |
+| `JAILBREAK.md` | The full history: pairing, Developer Mode, sideloading, sdb, and what is / isn't possible on Tizen 6. |
+| `STEPS.md` | The step-by-step walkthrough of setting everything up from a fresh TV. |
+| `token.txt` | *(gitignored)* The Control API token from `grabtoken.js`. |
+| `hbpin.txt` | *(gitignored)* The Tizen Homebrew service PIN. |
 
-## Setup (done once, already done here)
+## Typical session
 
-1. The TV's **network remote control** had to be enabled on the TV
-   (on this model: *Settings → Accessibility* → the "remote through network"
-   option; also surfaced as a pairing prompt the first time a client connects).
-2. Pairing was done with `grabtoken.js`: the TV shows an "Allow?" popup,
-   you press **OK** on the TV, then a **PIN** appears on screen; the PIN is
-   fed to the script on the *same* websocket connection and a token is
-   returned and stored in `token.txt`.
+```bash
+node wake.js               # TV is asleep? wake it
+./install-app.sh https://example.com/myapp.wgt   # sideload something
+node remote.js ok          # keys
+sdb/sdb shell:0 getduid    # talk to the debug daemon (cold boot first)
+```
 
-### If the token ever stops working (firmware update, factory reset)
+## Requirements
 
-1. `bun grabtoken.js`
-2. Press **OK** on the TV when it asks to allow the connection.
-3. Read the 8-digit PIN off the TV screen and run:
-   `echo 1234-5678 > /tmp/samsung-pin-in.txt` (replace with the real PIN) —
-   the script polls that file and saves the new token to `/tmp/samsung-token.txt`.
-4. Copy it over: `cp /tmp/samsung-token.txt token.txt`
-
-## Gotchas learned the hard way
-
-- **The TV drops commands sent before its handshake finishes.** `remote.js`
-  waits for the `ms.channel.connect` ack before sending — keep that.
-- **Wrong key names are silently ignored.** This TV wants `KEY_VOLUP`/
-  `KEY_VOLDOWN`, not `KEY_VOLUMEUP`/`KEY_VOLUMEDOWN`. The alias table in
-  `remote.js` hides that.
-- **Port 8002 uses a self-signed cert** — the TLS client trusts it with
-  `rejectUnauthorized: false` (fine on a home LAN).
-- Port 8001 (plain ws) works too but is stricter about the pairing flow;
-  8002 is the reliable one.
-- The TV does **not** expose "what's playing" over the local API on this
-  model — it's a one-way remote. You're the eyes.
-
-## TV details
-
-- Name: `Samsung CU7105 55` (AirPlay 2 advertised)
-- IP: `192.168.1.119` (may change if DHCP reassigns; the IP is hardcoded in
-  the scripts — update it there if commands start timing out)
-
-
-## Developer Mode / sdb (WIP — parked 2026-10-15)
-
-- **Developer Mode is ON on the TV**, IP set to the Mac (`192.168.1.7`).
-  Verified via API: `developerMode: "1"`. Setting path on this model:
-  *Home → Apps → App Settings (bottom) → press `123` button on the remote →
-  type `12345` on the on-screen keypad* (took a couple of tries).
-- **Concluded (second session, 2026-10-15):** the TV's `sdbd` simply never
-  starts on this 2021 Tizen 6 firmware. Exhausted: raw TSS handshake in both
-  directions (sending `tss-1.0` at the TV's 49001 in several payload variants,
-  and a TSS listener on the Mac's UDP 49001 across a full TV power cycle —
-  the TV never sent its greeting), host-side sdb server on 26101/26099, and
-  direct connection attempts (`sdb connect`). Ports 26101/26099/10022/49001
-  all stay closed with dev mode on + correct IP + reboot + no Reconnect
-  button in the dialog. Reference for the modern flow: github.com/SushyDev/
-  tizen-homebrew (2026) — plain TCP to 26101, no handshake; its error table
-  (ECONNREFUSED = sdbd not running) matches our state exactly.
-- `sdb/` contains a working macOS build of the sdb client (built from
-  `sdb/src/`, which carries an `#ifdef __linux__` patch in
-  `src/remount_service.c`; `make sdb` writes the binary to `bin/sdbd` on
-  Apple Silicon — the Makefile aliases it). `sdb start-server` works and
-  binds 26099 locally.
-- If we ever resume: only Tizen Studio's own dev-device connection remains
-  untested (its full stack may do something extra). Prize if it works:
-  `sdb shell` = real shell, `sdb install *.tpk` = sideloading.
+- Node 18+ (or Bun) on the machine you run this from.
+- The TV and your machine on the same LAN, or a tailnet in between.
+- For `sdb` and sideloading: Developer Mode on the TV (see `devmode/` and
+  [JAILBREAK.md](JAILBREAK.md)).

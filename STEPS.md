@@ -215,7 +215,7 @@ Question: "can I access the TV from remote or must I be on the same network?"
 Answer: as it stands, same network only (192.168.1.119 has no public address).
 Two real paths (full doc: `REMOTE-ACCESS.md`):
 - **Path A (recommended, zero TV changes):** Tailscale **subnet route via
-  lysk-server** (the always-on box, already on the tailnet):
+  an always-on box on the tailnet (e.g. a small Linux machine):
   `tailscale up --advertise-routes=192.168.1.0/24` on the server → reach the TV
   from anywhere through the tailnet. Covers the remote, sdb (after cold boot),
   everything.
@@ -242,4 +242,4 @@ Two real paths (full doc: `REMOTE-ACCESS.md`):
 3. **`rea decompile sdbd`** → find the exec gate
 4. **Fire the right SVE-2025-50109 payload** (or whatever the decompile reveals)
    → shell as `sdk` → sideload (TizenTube, Jellyfin, tailscale-tizen, our own)
-5. **Off-LAN**: `tailscale up --advertise-routes=192.168.1.0/24` on lysk-server
+5. **Off-LAN**: `tailscale up --advertise-routes=192.168.1.0/24` on that box
