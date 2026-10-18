@@ -8,7 +8,8 @@
     "listen": "node listen.js",
     "wake": "node wake.js",
     "install-app": "node install-app.js",
-    "devmode": "node devmode/devmode.js"
+    "devmode": "node devmode/devmode.js",
+    "restart": "node restart.js"
   },
   "dependencies": {
     "ws": "^8.22.0"
