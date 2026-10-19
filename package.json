@@ -9,7 +9,8 @@
     "wake": "node wake.js",
     "install-app": "node install-app.js",
     "devmode": "node devmode/devmode.js",
-    "restart": "node restart.js"
+    "restart": "node restart.js",
+    "stremio": "node stremio.js"
   },
   "dependencies": {
     "ws": "^8.22.0"
