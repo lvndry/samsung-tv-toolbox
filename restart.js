@@ -1,13 +1,17 @@
-// Bring the Homebrew service back after a cold boot or a self-update.
+// Bring the Homebrew service — and the Stremio server — back after a cold
+// boot or a self-update.
 //
-// The service self-heals a normal /restart on its own (it exits abnormally
-// and auto-restart reloads it). But two cases leave it down until something
-// launches it, and only the paired Mac can do that via the Control API:
+// Each service self-heals a normal restart on its own, but two cases leave
+// them down until something launches them, and only the paired Mac can do
+// that:
 //
 //   - a cold power cycle (on-boot is a no-op for a sideloaded service)
 //   - a self-update (sdbd stops the process mid-install, before it can exit)
 //
-//   node restart.js            # wait until it's up, or time out
+// After a standby wake the services come back on their own — this is only
+// needed for the two cases above.
+//
+//   node restart.js            # wait until both are up, or time out
 //   TV_IP=192.168.1.50 node restart.js
 //
 // Reads the pairing token (token.txt) and the Homebrew PIN (hbpin.txt).
@@ -18,8 +22,10 @@ import { fileURLToPath } from 'node:url';
 const dir = path.dirname(fileURLToPath(import.meta.url));
 const TV_IP = process.env.TV_IP || '192.168.1.119';
 const APP_ID = 'GJBBYNLkgP.TizenHomebrew';
+const STREMIO_ID = 'S6K2WQ8MnP.StremioServerService';
 const CONTROL = `http://${TV_IP}:8001/api/v2/applications/${APP_ID}`;
 const HEALTH = `http://${TV_IP}:8091/version`;
+const STREMIO = `http://${TV_IP}:11470/`;
 
 function read(file) {
   try { return fs.readFileSync(path.join(dir, file), 'utf8').trim(); }
@@ -35,16 +41,54 @@ if (!token) {
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-async function up() {
+const homebrewUp = async () => {
   try {
     const r = await fetch(HEALTH, { headers: { 'x-homebrew-pin': pin }, signal: AbortSignal.timeout(3000) });
     return r.status === 200;
   } catch { return false; }
-}
+};
 
-// Already up? Then there's nothing to do.
-if (await up()) {
+// The Stremio server keeps the torrent streams alive when the Mac is off —
+// the whole point of running it on the television — so a cold boot must
+// bring both back in one command. homebrew can launch it cross-app.
+const stremioUp = async () => {
+  try {
+    const r = await fetch(STREMIO, { signal: AbortSignal.timeout(3000) });
+    return r.status !== 0;
+  } catch { return false; }
+};
+
+const launchStremio = async () => {
+  try {
+    const r = await fetch(`http://${TV_IP}:8091/dev/eval`, {
+      method: 'POST',
+      headers: { 'x-homebrew-pin': pin },
+      body: `tizen.application.launch('${STREMIO_ID}'); 'ok'`,
+      signal: AbortSignal.timeout(20000)
+    });
+    return (await r.json()).ok === true;
+  } catch { return false; }
+};
+
+const reviveStremio = async () => {
+  if (await stremioUp()) return;
+  if (!(await launchStremio())) {
+    console.error('could not launch the Stremio server');
+    return;
+  }
+  for (let i = 0; i < 12; i++) {
+    await sleep(5000);
+    if (await stremioUp()) {
+      console.log(`stremio up in ~${(i + 1) * 5}s`);
+      return;
+    }
+  }
+  console.error('Stremio launched but :11470 silent after 60s — re-run, or check /home/owner/.stremio-server-boot.log via /dev/eval');
+};
+
+if (await homebrewUp()) {
   console.log(`homebrew already up on ${TV_IP}:8091`);
+  await reviveStremio();
   process.exit(0);
 }
 
@@ -58,8 +102,9 @@ let waited = 0;
 while (Date.now() < deadline) {
   await sleep(4000);
   waited += 4;
-  if (await up()) {
-    console.log(`up in ~${waited}s`);
+  if (await homebrewUp()) {
+    console.log(`homebrew up in ~${waited}s`);
+    await reviveStremio();
     process.exit(0);
   }
 }
