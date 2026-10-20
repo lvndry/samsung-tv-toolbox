@@ -1,6 +1,7 @@
 {
   "name": "samsung-tv-toolbox",
   "type": "module",
+  "license": "MIT",
   "scripts": {
     "pair": "node pair.js",
     "remote": "node remote.js",
