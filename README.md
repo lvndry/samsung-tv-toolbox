@@ -86,3 +86,10 @@ transfer, and a limited debug shell — the deepest door on these TVs.
   before resolving, so scripts can just send.
 - Key names on this generation of TV are the short forms: `KEY_VOLUP`,
   not `KEY_VOLUMEUP`. `lib/tv.js` translates the friendly names for you.
+
+---
+
+**Not affiliated with Samsung.** This project is not created, sponsored, or
+endorsed by Samsung Electronics. Samsung, Tizen, sdb and related names are
+trademarks of their respective owners, used here only to describe the hardware
+and software this works with.
