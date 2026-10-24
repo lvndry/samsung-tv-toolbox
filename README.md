@@ -1,4 +1,4 @@
-# tizen-toolbox
+# samsung-tv-toolbox
 
 Take over a Samsung Tizen smart TV from your own computer: send remote keys
 over the network, pair once, sideload apps, drive the Developer Mode
