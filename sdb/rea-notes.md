@@ -103,7 +103,7 @@ rea analyze-javascript-application /path/to/dir-or-app.asar --json
   (`--dry-run`, `--json`, `--yes --client <id>` for scripted use).
 
 ## Proven outputs (evidence)
-- `rea analyze /Users/YOURUSER/github/tv-remote/sdb/sdb --provider ghidra --json` →
+- `rea analyze /Users/YOURUSER/github/samsung-tv-toolbox/sdb/sdb --provider ghidra --json` →
   format `mach-o`, arch `arm64`, image base `0x100000000` (18 s first run).
 - `rea search ./sdb entry --kind procedures --provider ghidra --json` → entry at `0x100002368`.
 - `rea decompile ./sdb 0x100002368 --provider ghidra --json` →
