@@ -15,9 +15,9 @@
 // Note: sdbd only re-reads the value at TV boot. After a successful set,
 // a remote power off → on is still required before sdb accepts the new
 // host. This script does NOT power-cycle — do that once it reports OK.
-import { RemoteControl, loadToken } from '../lib/tv.js';
+import { RemoteControl, loadToken, CONTROL_BASE } from '../lib/tv.js';
+import { walkToDeveloperMode } from './keypad.js';
 
-const TV = process.env.TV_IP || '192.168.1.119';
 const token = loadToken();
 const ip = process.argv[2];
 
@@ -26,8 +26,8 @@ if (!ip || !/^\d{1,3}(\.\d{1,3}){3}$/.test(ip)) {
   process.exit(1);
 }
 
-const api = async (path) => {
-  const res = await fetch(`http://${TV}:8001${path}`, {
+const api = async (p) => {
+  const res = await fetch(`${CONTROL_BASE}${p}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   return { status: res.status, body: await res.text().catch(() => '') };
@@ -45,30 +45,7 @@ const remote = await RemoteControl.connect({ token });
 
 try {
   console.log(`-- current developerIP: ${await readDevIp()}`);
-  console.log('-- Home');
-  await remote.sendKey('home', { delayMs: 1500 });
-  console.log('-- Apps panel');
-  await remote.sendKey('apps', { delayMs: 2000 });
-  console.log('-- settings gear (top-right)');
-  await remote.sendKey('up', { delayMs: 400 });
-  await remote.sendKey('up', { delayMs: 400 });
-  await remote.sendKey('right', { delayMs: 400 });
-  await remote.sendKey('right', { delayMs: 400 });
-  await remote.sendKey('ok', { delayMs: 2000 });
-  console.log('-- 123 (keypad)');
-  await remote.sendKey('123', { delayMs: 2500 });
-  console.log('-- passcode 12345 (focus starts on 5, the center key)');
-  await remote.sendKey('up', { delayMs: 350 });
-  await remote.sendKey('left', { delayMs: 350 });
-  await remote.sendKey('ok', { delayMs: 600 }); // 1
-  await remote.sendKey('up', { delayMs: 350 });
-  await remote.sendKey('ok', { delayMs: 600 }); // 2
-  await remote.sendKey('up', { delayMs: 350 });
-  await remote.sendKey('right', { delayMs: 350 });
-  await remote.sendKey('ok', { delayMs: 600 }); // 3
-  await remote.sendKey('left', { delayMs: 350 });
-  await remote.sendKey('ok', { delayMs: 600 }); // 4
-  await remote.sendKey('ok', { delayMs: 2500 }); // 5
+  await walkToDeveloperMode(remote);
   console.log('-- Developer Mode dialog → Host PC IP field');
   await remote.sendKey('down', { delayMs: 700 });
   await remote.sendKey('ok', { delayMs: 1500 });

@@ -14,9 +14,10 @@ import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { TV_IP } from './lib/tv.js';
 
 const dir = path.dirname(fileURLToPath(import.meta.url));
-const TV = process.env.TV_IP || '192.168.1.119';
+const TV = TV_IP;
 
 const [src, ...rest] = process.argv.slice(2);
 if (!src) {
@@ -32,13 +33,6 @@ try {
 } catch {
   console.error(`no hbpin.txt next to this script (the Tizen Homebrew service PIN)`);
   process.exit(1);
-}
-
-// A .wgt is a zip; check its entry list for the Tizen manifest.
-function isTizenPackage(file) {
-  const out = spawnSync('unzip', ['-Z1', file], { encoding: 'utf8' });
-  if (out.status !== 0) return false;
-  return out.stdout.split('\n').some((f) => /config\.xml$|tizen-manifest\.xml$/.test(f.trim()));
 }
 
 // Rewrite the zip from scratch so every entry gets a plain local header
@@ -57,8 +51,13 @@ function repack(file) {
 let file = src;
 if (src.startsWith('http://') || src.startsWith('https://')) {
   console.log(`downloading ${src}`);
+  const res = await fetch(src);
+  if (!res.ok) {
+    console.error(`download failed: HTTP ${res.status} for ${src}`);
+    process.exit(1);
+  }
   file = path.join('/tmp', `tv-app-${Date.now()}.wgt`);
-  fs.writeFileSync(file, Buffer.from(await (await fetch(src)).arrayBuffer()));
+  fs.writeFileSync(file, Buffer.from(await res.arrayBuffer()));
 }
 
 async function install(file) {

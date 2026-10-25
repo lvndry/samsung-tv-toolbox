@@ -2,3 +2,9 @@ node_modules/
 token.txt
 firmware/
 hbpin.txt
+_tvtest*.js
+*.clean.wgt
+*.clean.wgt.stage
+.DS_Store
+sdb/.sdb.devicemap
+sdb/src/bin/sdbd.dSYM/

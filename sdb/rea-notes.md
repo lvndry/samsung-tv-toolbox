@@ -92,7 +92,7 @@ rea analyze-javascript-application /path/to/dir-or-app.asar --json
   ```
   Then feed extracted ELFs to REA (a): `rea analyze extracted/usr/bin/some-tool --provider ghidra`.
   This is exactly REA's documented workflow ("select a returned ELF separately for Ghidra analysis").
-  If you ever need REA's managed firmware lane, run it on a Linux box (SSH komodo box).
+  If you ever need REA's managed firmware lane, run it on a Linux box you can SSH into (any box you control).
 
 ### (d) Pointing REA at a file
 - CLI: pass the absolute (or cwd-relative) path as the first positional arg; add

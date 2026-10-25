@@ -14,7 +14,13 @@ if (!names.length) {
   process.exit(1);
 }
 
-const remote = await RemoteControl.connect({ token: loadToken() });
+let remote;
+try {
+  remote = await RemoteControl.connect({ token: loadToken() });
+} catch (e) {
+  console.error(e.message);
+  process.exit(1);
+}
 try {
   await remote.keys(names);
   console.log(`SENT: ${names.join(', ')}`);

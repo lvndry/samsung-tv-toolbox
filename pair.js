@@ -2,22 +2,25 @@
 //
 // Connects without a token. If the TV has already been paired from this
 // machine before, the token comes straight from the connect event and this
-// is a 2-second affair. Otherwise the TV shows a PIN — type it into
-// /tmp/samsung-pin-in.txt (e.g. `echo 1234 > /tmp/samsung-pin-in.txt`) and
-// the script picks it up.
+// is a 2-second affair. Otherwise the TV shows a PIN — type it into the
+// PIN_INPUT_FILE (a private, per-run file in the OS temp dir; the path is
+// printed when it is needed) and the script picks it up.
 //
 //   node pair.js
 //
-// On success the token is saved to token.txt next to this script — that
-// file is the entire authentication, keep it.
+// On success the token is saved to token.txt next to this script (mode
+// 0600) — that file is the entire authentication, keep it.
+import crypto from 'node:crypto';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { RemoteControl, sleep } from './lib/tv.js';
 import WebSocket from 'ws';
 
 const dir = path.dirname(fileURLToPath(import.meta.url));
-const pinFile = '/tmp/samsung-pin-in.txt';
+// Per-run PIN input file: private (0600), unique, unlinked once read.
+const pinFile = path.join(os.tmpdir(), `samsung-pin-in-${process.pid}-${crypto.randomBytes(4).toString('hex')}.txt`);
 
 // Read the next message that arrives on the open socket.
 function nextMessage(ws, { timeoutMs = 20000 } = {}) {
@@ -32,6 +35,15 @@ function nextMessage(ws, { timeoutMs = 20000 } = {}) {
   });
 }
 
+
+// The connect message embeds the pairing token — never print it raw.
+function describe(message) {
+  const copy = { ...message };
+  if (copy?.data && typeof copy.data === 'object') copy.data = { ...copy.data, token: '…' };
+  else if (typeof copy?.data === 'string' && copy.data.length > 20) copy.data = '…';
+  return JSON.stringify(copy).slice(0, 300);
+}
+
 const ws = await new Promise((resolve, reject) => {
   const socket = new WebSocket(RemoteControl.channelUrl(undefined));
   socket.on('open', () => resolve(socket));
@@ -42,7 +54,7 @@ const ws = await new Promise((resolve, reject) => {
 console.log('connected, waiting for the TV...');
 let token = null;
 let message = await nextMessage(ws);
-console.log('TV:', JSON.stringify(message).slice(0, 300));
+console.log('TV:', describe(message));
 token = message?.data?.token ?? null;
 
 if (!token) {
@@ -55,22 +67,25 @@ if (!token) {
   }
   console.log(`PIN on the TV: ${message.data}`);
   console.log(`type it (dashes ok) into ${pinFile}, e.g.:  echo 1234 > ${pinFile}`);
-
   let pin = null;
-  for (let i = 0; i < 240 && !pin; i++) {
-    await sleep(500);
-    try {
-      const typed = fs.readFileSync(pinFile, 'utf8').trim();
-      if (typed) pin = typed.replace(/-/g, '');
-    } catch {}
+  try {
+    for (let i = 0; i < 240 && !pin; i++) {
+      await sleep(500);
+      try {
+        const typed = fs.readFileSync(pinFile, 'utf8').trim();
+        if (typed) pin = typed.replace(/-/g, '');
+      } catch {}
+    }
+    if (!pin) {
+      console.error('gave up waiting for the PIN');
+      process.exit(1);
+    }
+    ws.send(JSON.stringify({ event: 'req', id: 'pairing', data: pin }));
+    message = await nextMessage(ws);
+  } finally {
+    try { fs.unlinkSync(pinFile); } catch {}
   }
-  if (!pin) {
-    console.error('gave up waiting for the PIN');
-    process.exit(1);
-  }
-  ws.send(JSON.stringify({ event: 'req', id: 'pairing', data: pin }));
-  message = await nextMessage(ws);
-  console.log('TV:', JSON.stringify(message).slice(0, 300));
+  console.log('TV:', describe(message));
   token = message?.data?.token ?? (typeof message?.data === 'string' ? message.data : null);
 }
 
@@ -80,7 +95,7 @@ if (!token) {
 }
 
 const file = path.join(dir, 'token.txt');
-fs.writeFileSync(file, token);
+fs.writeFileSync(file, token, { mode: 0o600 });
 console.log(`token saved to ${file}`);
 ws.close();
 

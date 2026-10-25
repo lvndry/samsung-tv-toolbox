@@ -15,22 +15,17 @@
 //   TV_IP=192.168.1.50 node restart.js
 //
 // Reads the pairing token (token.txt) and the Homebrew PIN (hbpin.txt).
-import fs from 'node:fs';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import {
+  TV_IP, HOMEBREW_ID, STREMIO_ID, HOME_BREW, STREMIO_URL, CONTROL_BASE,
+  read, sleep,
+} from './lib/tv.js';
 
-const dir = path.dirname(fileURLToPath(import.meta.url));
-const TV_IP = process.env.TV_IP || '192.168.1.119';
-const APP_ID = 'GJBBYNLkgP.TizenHomebrew';
-const STREMIO_ID = 'S6K2WQ8MnP.StremioServerService';
-const CONTROL = `http://${TV_IP}:8001/api/v2/applications/${APP_ID}`;
-const HEALTH = `http://${TV_IP}:8091/version`;
-const STREMIO = `http://${TV_IP}:11470/`;
-
-function read(file) {
-  try { return fs.readFileSync(path.join(dir, file), 'utf8').trim(); }
-  catch { return ''; }
-}
+// Package IDs and endpoints come from lib/tv.js (per-install values,
+// overridable via HOMEBREW_ID / STREMIO_ID / TV_IP).
+const APP_ID = HOMEBREW_ID;
+const CONTROL = `${CONTROL_BASE}/api/v2/applications/${APP_ID}`;
+const HEALTH = `${HOME_BREW}/version`;
+const STREMIO = STREMIO_URL;
 
 const token = read('token.txt');
 const pin = process.env.HB_PIN || read('hbpin.txt') || '000000';
@@ -38,8 +33,6 @@ if (!token) {
   console.error(`no token.txt — run: node pair.js`);
   process.exit(1);
 }
-
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 const homebrewUp = async () => {
   try {
@@ -51,16 +44,18 @@ const homebrewUp = async () => {
 // The Stremio server keeps the torrent streams alive when the Mac is off —
 // the whole point of running it on the television — so a cold boot must
 // bring both back in one command. homebrew can launch it cross-app.
+// Any HTTP answer from :11470 means the process is listening — fetch only
+// rejects (caught) when it is down, so a resolved fetch is a live server.
 const stremioUp = async () => {
   try {
-    const r = await fetch(STREMIO, { signal: AbortSignal.timeout(3000) });
-    return r.status !== 0;
+    await fetch(STREMIO, { signal: AbortSignal.timeout(3000) });
+    return true;
   } catch { return false; }
 };
 
 const launchStremio = async () => {
   try {
-    const r = await fetch(`http://${TV_IP}:8091/dev/eval`, {
+    const r = await fetch(`${HOME_BREW}/dev/eval`, {
       method: 'POST',
       headers: { 'x-homebrew-pin': pin },
       body: `tizen.application.launch('${STREMIO_ID}'); 'ok'`,
