@@ -5,7 +5,7 @@ Control a Samsung Tizen TV from your computer over the LAN.
 Samsung's own tooling for this is Tizen Studio, which is heavy and mostly
 built for app developers. These are small Node scripts that do the everyday
 parts directly: pair with the TV, send remote keys, wake it from standby,
-launch apps, turn on Developer Mode, and talk to its `sdb` debug daemon.
+launch apps, open URLs, type text, turn on Developer Mode, and talk to its `sdb` debug daemon.
 
 Everything here uses Samsung's own interfaces and works on a stock TV. To
 install apps that aren't in Samsung's store, see
@@ -40,15 +40,14 @@ key clicks, state requests, events.
 | File | What it does | Run it |
 | --- | --- | --- |
 | `pair.js` | Pairs with the TV and saves `token.txt`, then nudges the volume so you can see it worked. Run again to re-pair. | `node pair.js` |
-| `remote.js` | Sends one or more key presses. Accepts friendly names (`power`, `volumeUp`, `ok`, `up`) or raw TV codes (`KEY_MUTE`, `KEY_0`, `KEY_RED`). | `node remote.js ok up down` |
-| `state.js` | Asks the TV for its current app, media and installed-app state. Many models, this one included, answer almost none of these, so empty output is normal. | `node state.js` |
-| `listen.js` | Prints everything the TV pushes on the channel. Use the TV to see events. Ctrl+C to stop. | `node listen.js` |
-| `wake.js` | Wakes the TV from standby with Wake-on-LAN, in about 10 s. Takes the TV's MAC address (from its network settings or `arp -a`). Apps don't relaunch after a wake. | `node wake.js <MAC> [broadcast]` |
-| `launch.js` | Launches an app by its ID through the REST API. With `--wait`, it leaves an app that is already listening alone, otherwise closes and relaunches it and waits up to 90 s for the port to open. Useful for background services that don't come back after a cold boot. | `node launch.js <appId> [--wait <port>]` |
+| `info.js` | Prints the TV's model, firmware, power state (on or standby), Developer Mode and its IP, and the Wi-Fi MAC address `wake.js` needs. No pairing needed. `--json` prints the full answer. | `node info.js` |
+| `remote.js` | Sends one or more key presses. Accepts friendly names (`power`, `volumeUp`, `ok`, `up`) or raw TV codes (`KEY_MUTE`, `KEY_0`, `KEY_RED`). `key:hold` long-presses (1 s, or `key:hold:3000`). `--text` types into an on-screen keyboard that is already open. | `node remote.js ok up down` · `node remote.js --text "hello"` |
+| `listen.js` | Prints everything the TV pushes on the channel. Use the TV to see events. `--ask` also requests the current app, media and installed apps; many models, this one included, answer almost none of these. Ctrl+C to stop. | `node listen.js [--ask]` |
+| `wake.js` | Wakes the TV from standby with Wake-on-LAN, in about 10 s. Takes the TV's MAC address (from `node info.js` while it's on). Apps don't relaunch after a wake. | `node wake.js <MAC> [broadcast]` |
+| `app.js` | Launches, closes or inspects an app by its ID. `--wait <port>` relaunches it unless the port already answers, then waits up to 90 s, which is how you bring back a background service after a cold boot. `--link` launches with a deep-link payload; `--url` opens a page in the TV's browser. | `node app.js <appId> [status\|close] [--wait <port>] [--link <data>]` · `node app.js --url <url>` |
 | `devmode/devmode.js` | Turns on Developer Mode by driving the TV's menus: Apps panel → settings gear → `123` → keypad `12345`. Survives reboots, so it's a one-time step. | `node devmode/devmode.js` |
 | `devmode/hostip.js` | Sets the Developer Mode **Host PC IP**, then reads it back through the Control API to confirm the TV kept it. Takes effect after a TV restart. | `node devmode/hostip.js <ip>` |
 | `devmode/keypad.js` | Types `12345` on the on-screen keypad, for when `devmode.js` stops short. Also holds the menu walk the other two share. | `node devmode/keypad.js` |
-| `devmode/appsettings.js` | Navigates Smart Hub → Apps to the bottom and leaves "App Settings" selected, the official path to the same toggle. | `node devmode/appsettings.js` |
 | `lib/tv.js` | Shared code: `TV_IP`, the REST endpoint, token loading, the `RemoteControl` class and the key-name map. | (library) |
 
 ## sdb
@@ -59,8 +58,6 @@ key clicks, state requests, events.
 - `sdb/src/` is the upstream [TizenTeam/sdb](https://github.com/TizenTeam/sdb)
   source. It is Apache-2.0 (see `sdb/src/LICENSE`); the rest of this repo
   is MIT.
-- `sdb/rea-notes.md` covers setting up the REA reverse-engineering tools
-  (Ghidra, binwalk, zig) used on the TV firmware.
 
 The TV's `sdbd` only accepts connections from the address in Developer
 Mode's **Host PC IP**, and only reads it at boot. To use `sdb` from your
@@ -73,7 +70,7 @@ two can't be used at the same time; see tizen-tap's
 
 - Node 18+ or Bun.
 - The computer and the TV on the same network (a tailnet works too).
-- `token.txt` from `pair.js` for everything except `wake.js`.
+- `token.txt` from `pair.js` for everything except `info.js` and `wake.js`.
 - Developer Mode on for `sdb`.
 
 ## Protocol notes
