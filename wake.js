@@ -2,17 +2,16 @@
 //
 //   node wake.js <MAC> [broadcast]
 //
-// The TV's MAC address (get it from the TV's network settings, or `arp -a`)
-// comes up in ~10 seconds. Note: apps do NOT auto-launch after a WoL wake —
-// if you need the homebrew sideloader (port 8091), start it after the TV is
-// up.
+// The TV comes up in ~10 seconds. Get its MAC address once with
+// `node info.js` while it is on. Apps do NOT auto-launch after a WoL wake;
+// start what you need with app.js once the TV is up.
 import dgram from 'node:dgram';
 import { TV_IP } from './lib/tv.js';
 
 const MAC = (process.argv[2] || '').toLowerCase();
 if (!MAC) {
   console.error(`usage: node wake.js <MAC> [broadcast]`);
-  console.error(`MAC of the TV, e.g. node wake.js aa:bb:cc:dd:ee:ff — find it in the TV's network settings or with arp -a`);
+  console.error(`MAC of the TV, e.g. node wake.js aa:bb:cc:dd:ee:ff — get it with node info.js while the TV is on`);
   process.exit(1);
 }
 // Default broadcast: the TV's own network, last octet 255 (respects TV_IP).
