@@ -5,12 +5,11 @@ Control a Samsung Tizen TV from your computer over the LAN.
 Samsung's own tooling for this is Tizen Studio, which is heavy and mostly
 built for app developers. These are small Node scripts that do the everyday
 parts directly: pair with the TV, send remote keys, wake it from standby,
-turn on Developer Mode, sideload an app, and talk to its `sdb` debug daemon.
+launch apps, turn on Developer Mode, and talk to its `sdb` debug daemon.
 
-It is the computer-side companion to
+Everything here uses Samsung's own interfaces and works on a stock TV. To
+install apps that aren't in Samsung's store, see
 [tizen-tap](https://github.com/lvndry/tizen-tap), which runs on the TV.
-Most scripts work without it; `install-app.js`, `restart.js` and
-`stremio.js` need it installed.
 
 Built and tested against a Samsung CU7105 on Tizen 6.5. The remote-control
 and sdb parts apply to most modern Samsung smart TVs.
@@ -45,17 +44,12 @@ key clicks, state requests, events.
 | `state.js` | Asks the TV for its current app, media and installed-app state. Many models, this one included, answer almost none of these, so empty output is normal. | `node state.js` |
 | `listen.js` | Prints everything the TV pushes on the channel. Use the TV to see events. Ctrl+C to stop. | `node listen.js` |
 | `wake.js` | Wakes the TV from standby with Wake-on-LAN, in about 10 s. Takes the TV's MAC address (from its network settings or `arp -a`). Apps don't relaunch after a wake. | `node wake.js <MAC> [broadcast]` |
-| `install-app.js` | Installs a `.wgt` or `.tpk` from a URL or local path through tizen-tap (port `8091`), then launches it. If the TV rejects the zip, it repacks it once and retries. Needs `hbpin.txt`. | `node install-app.js <url-or-path> "My App"` |
-| `restart.js` | Relaunches tizen-tap and the Stremio server after a cold boot or a self-update, and waits until both ports answer. Needs `token.txt` and `hbpin.txt`. | `node restart.js` |
-| `stremio.js` | Relaunches only the Stremio server (port `11470`) through tizen-tap and waits for it to answer. Reports a wrong PIN as a 403. Needs `hbpin.txt`. | `node stremio.js` |
+| `launch.js` | Launches an app by its ID through the REST API. With `--wait`, it leaves an app that is already listening alone, otherwise closes and relaunches it and waits up to 90 s for the port to open. Useful for background services that don't come back after a cold boot. | `node launch.js <appId> [--wait <port>]` |
 | `devmode/devmode.js` | Turns on Developer Mode by driving the TV's menus: Apps panel → settings gear → `123` → keypad `12345`. Survives reboots, so it's a one-time step. | `node devmode/devmode.js` |
 | `devmode/hostip.js` | Sets the Developer Mode **Host PC IP**, then reads it back through the Control API to confirm the TV kept it. Takes effect after a TV restart. | `node devmode/hostip.js <ip>` |
 | `devmode/keypad.js` | Types `12345` on the on-screen keypad, for when `devmode.js` stops short. Also holds the menu walk the other two share. | `node devmode/keypad.js` |
 | `devmode/appsettings.js` | Navigates Smart Hub → Apps to the bottom and leaves "App Settings" selected, the official path to the same toggle. | `node devmode/appsettings.js` |
-| `lib/tv.js` | Shared code: `TV_IP`, package IDs, endpoints, token loading, the `RemoteControl` class and the key-name map. | (library) |
-
-`hbpin.txt` holds tizen-tap's 6-digit PIN, shown on the TV screen. It is
-gitignored like `token.txt`.
+| `lib/tv.js` | Shared code: `TV_IP`, the REST endpoint, token loading, the `RemoteControl` class and the key-name map. | (library) |
 
 ## sdb
 
@@ -80,8 +74,7 @@ two can't be used at the same time; see tizen-tap's
 - Node 18+ or Bun.
 - The computer and the TV on the same network (a tailnet works too).
 - `token.txt` from `pair.js` for everything except `wake.js`.
-- Developer Mode on for `sdb`, and tizen-tap installed for
-  `install-app.js`, `restart.js` and `stremio.js`.
+- Developer Mode on for `sdb`.
 
 ## Protocol notes
 
@@ -93,10 +86,6 @@ two can't be used at the same time; see tizen-tap's
   (wrong IP, TV off, port 8002 refused).
 - This generation of TV uses short key names: `KEY_VOLUP`, not
   `KEY_VOLUMEUP`. `lib/tv.js` maps the friendly names for you.
-- tizen-tap and the Stremio server are sideloaded, so neither comes back on
-  its own after a cold boot. That's what `restart.js` and `stremio.js` are
-  for. Their package IDs differ per install; set `HOMEBREW_ID` /
-  `STREMIO_ID` if yours don't match the defaults in `lib/tv.js`.
 
 ---
 
