@@ -7,7 +7,6 @@
     "remote": "node remote.js",
     "listen": "node listen.js",
     "wake": "node wake.js",
-    "devmode": "node devmode/devmode.js",
     "app": "node app.js",
     "info": "node info.js",
     "apps": "node apps.js"
