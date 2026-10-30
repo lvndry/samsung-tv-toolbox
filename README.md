@@ -47,7 +47,7 @@ key clicks, state requests, events.
 | `app.js` | Launches, closes or inspects an app by its ID. `--wait <port>` relaunches it unless the port already answers, then waits up to 90 s, which is how you bring back a background service after a cold boot. `--link` launches with a deep-link payload; `--url` opens a page in the TV's browser. | `node app.js <appId> [status\|close] [--wait <port>] [--link <data>]` · `node app.js --url <url>` |
 | `apps.js` | Shows which well-known apps (Netflix, YouTube, Prime Video, ...) are running or stopped. `--close` closes the running ones to free memory, sparing any `--keep <id>`. Extra ids passed as arguments are checked too. | `node apps.js [--close] [--keep <id>]` |
 | `devmode/devmode.js` | Turns on Developer Mode by driving the TV's menus: Apps panel → settings gear → `123` → keypad `12345`. Survives reboots, so it's a one-time step. | `node devmode/devmode.js` |
-| `devmode/keypad.js` | Types `12345` on the on-screen keypad, for when `devmode.js` stops short. Also holds the menu walk the other two share. | `node devmode/keypad.js` |
+| `devmode/keypad.js` | Types `12345` on the on-screen keypad, for when `devmode.js` stops short. Also holds the menu walk `devmode.js` uses. | `node devmode/keypad.js` |
 | `lib/tv.js` | Shared code: `TV_IP`, the REST endpoint, token loading, the `RemoteControl` class and the key-name map. | (library) |
 
 ## Low memory: services keep dying

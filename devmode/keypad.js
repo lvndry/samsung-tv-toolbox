@@ -16,7 +16,7 @@
 import { RemoteControl, loadToken } from '../lib/tv.js';
 
 // The verified 12345 entry from a keypad focused on 5.
-export async function typePasscode12345(remote) {
+async function typePasscode12345(remote) {
   console.log('-- passcode 12345 (focus starts on 5, the center key)');
   await remote.sendKey('up', { delayMs: 350 });
   await remote.sendKey('left', { delayMs: 350 });
