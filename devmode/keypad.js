@@ -12,7 +12,7 @@
 // So from 5:  1 = up+left,  2 = up,  3 = up+right,  4 = left, 5 = stay.
 //
 // Also exports the full Developer Mode walk (Home → Apps → settings gear →
-// 123 → passcode 12345) that devmode.js and hostip.js share.
+// 123 → passcode 12345) that devmode.js uses.
 import { RemoteControl, loadToken } from '../lib/tv.js';
 
 // The verified 12345 entry from a keypad focused on 5.
