@@ -46,14 +46,14 @@ const token = loadToken();
 const control = `${CONTROL_BASE}/api/v2/applications/${appId}`;
 const rest = (method) => fetch(control, { method, headers: { Authorization: `Bearer ${token}` } })
   .catch((error) => {
-    console.error(`could not reach ${CONTROL_BASE}: ${error.message} — is the TV on?`);
+    console.error(`could not reach ${CONTROL_BASE}: ${error.message}. Is the TV on?`);
     process.exit(1);
   });
 
 if (action === 'status') {
   const response = await rest('GET');
   if (!response.ok) {
-    console.error(`status of ${appId} answered HTTP ${response.status} — is it installed?`);
+    console.error(`status of ${appId} answered HTTP ${response.status}. Is it installed?`);
     process.exit(1);
   }
   console.log(JSON.stringify(await response.json(), null, 2));
@@ -98,7 +98,7 @@ if (port) {
 
 const launched = await rest('POST');
 if (!launched.ok) {
-  console.error(`launch of ${appId} answered HTTP ${launched.status} — is the app installed and the token current (node pair.js)?`);
+  console.error(`launch of ${appId} answered HTTP ${launched.status}. Is the app installed and the token current (node pair.js)?`);
   process.exit(1);
 }
 

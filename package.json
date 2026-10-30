@@ -9,7 +9,8 @@
     "wake": "node wake.js",
     "devmode": "node devmode/devmode.js",
     "app": "node app.js",
-    "info": "node info.js"
+    "info": "node info.js",
+    "apps": "node apps.js"
   },
   "dependencies": {
     "ws": "^8.22.0"

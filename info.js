@@ -7,7 +7,7 @@ import { TV_IP, CONTROL_BASE } from './lib/tv.js';
 
 const response = await fetch(`${CONTROL_BASE}/api/v2/`, { signal: AbortSignal.timeout(5000) })
   .catch((error) => {
-    console.error(`no answer from ${TV_IP}:8001 — is the TV on? (${error.message})`);
+    console.error(`no answer from ${TV_IP}:8001. Is the TV on? (${error.message})`);
     process.exit(1);
   });
 

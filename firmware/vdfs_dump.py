@@ -49,7 +49,7 @@ def find_catalog_head(f, image_size):
         if 1 <= height <= 8 and 0 < root < 0x100000:
             return off
         idx = chunk.find(b"eHND", idx + 1)
-    sys.exit("catalog head (eHND) not found — not a VDFS2007 volume?")
+    sys.exit("catalog head (eHND) not found. Not a VDFS2007 volume?")
 
 
 class Vdfs:
