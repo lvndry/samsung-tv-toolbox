@@ -47,7 +47,6 @@ key clicks, state requests, events.
 | `app.js` | Launches, closes or inspects an app by its ID. `--wait <port>` relaunches it unless the port already answers, then waits up to 90 s, which is how you bring back a background service after a cold boot. `--link` launches with a deep-link payload; `--url` opens a page in the TV's browser. | `node app.js <appId> [status\|close] [--wait <port>] [--link <data>]` · `node app.js --url <url>` |
 | `apps.js` | Shows which well-known apps (Netflix, YouTube, Prime Video, ...) are running or stopped. `--close` closes the running ones to free memory, sparing any `--keep <id>`. Extra ids passed as arguments are checked too. | `node apps.js [--close] [--keep <id>]` |
 | `devmode/devmode.js` | Turns on Developer Mode by driving the TV's menus: Apps panel → settings gear → `123` → keypad `12345`. Survives reboots, so it's a one-time step. | `node devmode/devmode.js` |
-| `devmode/hostip.js` | Sets the Developer Mode **Host PC IP**, then reads it back through the Control API to confirm the TV kept it. Takes effect after a TV restart. | `node devmode/hostip.js <ip>` |
 | `devmode/keypad.js` | Types `12345` on the on-screen keypad, for when `devmode.js` stops short. Also holds the menu walk the other two share. | `node devmode/keypad.js` |
 | `lib/tv.js` | Shared code: `TV_IP`, the REST endpoint, token loading, the `RemoteControl` class and the key-name map. | (library) |
 
@@ -82,7 +81,7 @@ Closing them is safe. They start normally the next time someone opens them.
 
 The TV's `sdbd` only accepts connections from the address in Developer
 Mode's **Host PC IP**, and only reads it at boot. To use `sdb` from your
-computer, set Host PC IP to your computer's address (`devmode/hostip.js`)
+computer, set Host PC IP to your computer's address (by hand: Apps, `12345`, Developer mode)
 and restart the TV. tizen-tap needs it set to `127.0.0.1` instead, so the
 two can't be used at the same time; see tizen-tap's
 [docs/sdbd-and-root.md](https://github.com/lvndry/tizen-tap/blob/main/docs/sdbd-and-root.md).
