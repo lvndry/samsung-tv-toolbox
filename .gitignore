@@ -4,4 +4,5 @@ firmware/
 _tvtest*.js
 .DS_Store
 sdb/.sdb.devicemap
+.sdb.devicemap
 sdb/src/bin/sdbd.dSYM/

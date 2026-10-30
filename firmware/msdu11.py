@@ -40,7 +40,7 @@ from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 # Board release keys (board tag in info.txt "Xxx Board rel key" -> key).
 # Source: theubusu/unixtract keys.ukf, community-published.
 BOARD_KEYS = {
-    # "KantSU2E 2023" — CU7105 and other KSU2E boards (Tizen 6.5, 2023)
+    # "KantSU2E 2023": CU7105 and other KSU2E boards (Tizen 6.5, 2023)
     "KantSU2E 2023": "13f9ed51b5b5f285ee79a80b5a252ec80b4ca9ff3431bec06e2ec866867d25b8",
 }
 
@@ -201,7 +201,7 @@ def main():
     pt = aes256cbc(blob[16:], key, salt)
     pad = pt[-1]
     if not (1 <= pad <= 16) or pt[-pad:] != bytes([pad]) * pad:
-        sys.exit(f"TOC padding check failed (pad={pad}) — wrong board key?")
+        sys.exit(f"TOC padding check failed (pad={pad}). Wrong board key?")
     items, info = parse_ouith(pt)
     print(f"image info: {info!r}; items: {len(items)}")
     with open(os.path.join(a.outdir, "toc.ouith"), "wb") as f:

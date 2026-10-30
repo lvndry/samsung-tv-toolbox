@@ -11,7 +11,7 @@ import { TV_IP } from './lib/tv.js';
 const MAC = (process.argv[2] || '').toLowerCase();
 if (!MAC) {
   console.error(`usage: node wake.js <MAC> [broadcast]`);
-  console.error(`MAC of the TV, e.g. node wake.js aa:bb:cc:dd:ee:ff — get it with node info.js while the TV is on`);
+  console.error(`MAC of the TV, e.g. node wake.js aa:bb:cc:dd:ee:ff (get it with node info.js while the TV is on)`);
   process.exit(1);
 }
 // Default broadcast: the TV's own network, last octet 255 (respects TV_IP).

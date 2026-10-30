@@ -2,8 +2,8 @@
 
 Extract and inspect the system rootfs from Samsung Tizen TV firmware
 images, without the TV in the loop. Built while debugging the CU7105
-(Tizen 6.5, board KSU2E) sdbd handshake — the daemon that gates every
-`sudo`/root operation on the TV — but the format is per-board, not
+(Tizen 6.5, board KSU2E) sdbd handshake (the daemon that gates every
+`sudo`/root operation on the TV), but the format is per-board, not
 per-model, so the same recipe applies to any MSDU11 + VDFS Tizen image.
 
 ## What you get
@@ -45,7 +45,7 @@ strings ./fw-out/dumps/dump_sdbd | grep -iE 'ip|host|peer|lock|token'
 
 ## Board keys
 
-Section encryption uses a per-board release key. They are public — the
+Section encryption uses a per-board release key. They are public: the
 community keeps them in [theubusu/unixtract](https://github.com/theubusu/unixtract)
 (`keys.ukf`). `msdu11.py` has the KSU2E key baked in; for other boards:
 
@@ -66,7 +66,7 @@ Verified against HinTak/vdfs-tools source and a KSU2E image:
   of the bnode; key = `(parent_id, object_id, record_type, name)`
 - file record = 88-byte folder header + fork: size, tbc, 9 × 24-byte
   extents pointing at 4096-byte blocks (dedup is extent sharing at mkfs
-  time — no pointer indirection at read time)
+  time, no pointer indirection at read time)
 
 `vdfs_dump.py` walks the whole catalog and prints every file, so it
 doubles as a firmware file browser: `python3 vdfs_dump.py platform.img`
@@ -74,12 +74,12 @@ lists thousands of paths.
 
 ## Found while writing this
 
-Everything this repo documents about sdbd came out of this image — see
+Everything this repo documents about sdbd came out of this image. See
 `../sdb/rea-notes.md` and the tizen-tap repo's `docs/sdbd-and-root.md`:
 
 - `sdbd.service` runs as `User=sdk` with
   `EnvironmentFile=-/run/sdbd-env` and `ExecStart=/usr/sbin/sdbd $SDBD_CMDLINE`
-- `sdbd-tcp.socket` is systemd socket activation on `26101` — the port
+- `sdbd-tcp.socket` is systemd socket activation on `26101`. The port
   answers even while the handshake logic resets the connection
 - `sdbd_start.sh` is the interactive sdb menu (mode 0/1/2, LAN IP,
   HyperUART) and restarts sdbd after writing the buxton2 values
