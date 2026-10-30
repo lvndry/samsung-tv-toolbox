@@ -44,11 +44,16 @@ const status = async (appId) => {
       process.exit(1);
     });
   if (response.status === 404) return null;
-  return response.ok ? response.json() : null;
+  if (!response.ok) {
+    console.error(`${appId}: HTTP ${response.status}. Is token.txt current? Re-pair with: node pair.js`);
+    return null;
+  }
+  return response.json();
 };
 
 const ids = [...new Set([...Object.keys(KNOWN), ...extra])];
 const running = [];
+let found = 0;
 
 for (const appId of ids) {
   const app = await status(appId);
@@ -56,6 +61,13 @@ for (const appId of ids) {
   const name = app.name || KNOWN[appId] || appId;
   console.log(`${app.running ? 'running' : 'stopped'}  ${name.padEnd(16)} ${appId}${keep.has(appId) ? '  (kept)' : ''}`);
   if (app.running && !keep.has(appId)) running.push({ appId, name });
+  found++;
+}
+
+// A TV that has just had Smart Hub reset answers 404 for every app until it is set up again.
+if (!found) {
+  console.log(`none of the ${ids.length} app ids answered (all 404). Not installed, or the TV hides its apps until Smart Hub is set up.`);
+  process.exit(0);
 }
 
 if (!close) {
