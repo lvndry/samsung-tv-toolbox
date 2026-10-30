@@ -5,7 +5,7 @@ Control a Samsung Tizen TV from your computer over the LAN.
 Samsung's own tooling for this is Tizen Studio, which is heavy and mostly
 built for app developers. These are small Node scripts that do the everyday
 parts directly: pair with the TV, send remote keys, wake it from standby,
-launch apps, open URLs, type text, turn on Developer Mode, and talk to its `sdb` debug daemon.
+launch apps, open URLs, type text, read Developer Mode state, and talk to its `sdb` debug daemon.
 
 Everything here uses Samsung's own interfaces and works on a stock TV. To
 install apps that aren't in Samsung's store, see
@@ -46,8 +46,6 @@ key clicks, state requests, events.
 | `wake.js` | Wakes the TV from standby with Wake-on-LAN, in about 10 s. Takes the TV's MAC address (from `node info.js` while it's on). Apps don't relaunch after a wake. | `node wake.js <MAC> [broadcast]` |
 | `app.js` | Launches, closes or inspects an app by its ID. `--wait <port>` relaunches it unless the port already answers, then waits up to 90 s, which is how you bring back a background service after a cold boot. `--link` launches with a deep-link payload; `--url` opens a page in the TV's browser. | `node app.js <appId> [status\|close] [--wait <port>] [--link <data>]` · `node app.js --url <url>` |
 | `apps.js` | Shows which well-known apps (Netflix, YouTube, Prime Video, ...) are running or stopped. `--close` closes the running ones to free memory, sparing any `--keep <id>`. Extra ids passed as arguments are checked too. | `node apps.js [--close] [--keep <id>]` |
-| `devmode/devmode.js` | Turns on Developer Mode by driving the TV's menus: Apps panel → settings gear → `123` → keypad `12345`. Survives reboots, so it's a one-time step. | `node devmode/devmode.js` |
-| `devmode/keypad.js` | Types `12345` on the on-screen keypad, for when `devmode.js` stops short. Also holds the menu walk the other two share. | `node devmode/keypad.js` |
 | `lib/tv.js` | Shared code: `TV_IP`, the REST endpoint, token loading, the `RemoteControl` class and the key-name map. | (library) |
 
 ## Low memory: services keep dying
@@ -91,7 +89,7 @@ two can't be used at the same time; see tizen-tap's
 - Node 18+ or Bun.
 - The computer and the TV on the same network (a tailnet works too).
 - `token.txt` from `pair.js` for everything except `info.js` and `wake.js`.
-- Developer Mode on for `sdb`.
+- Developer Mode on for `sdb`. Turn it on by hand on the TV: open Apps, type `12345` on the remote (or hold Enter), set Developer mode On.
 
 ## Protocol notes
 

@@ -52,10 +52,9 @@ const ws = await new Promise((resolve, reject) => {
 });
 
 console.log('connected, waiting for the TV...');
-let token = null;
 let message = await nextMessage(ws);
 console.log('TV:', describe(message));
-token = message?.data?.token ?? null;
+let token = message?.data?.token ?? null;
 
 if (!token) {
   console.log('TV asks for a pairing PIN — it is shown on the screen right now.');
